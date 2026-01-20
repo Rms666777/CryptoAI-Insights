@@ -56,3 +56,9 @@ export interface AIAnalysisResult {
   markdown: string;
   timestamp: number;
 }
+
+export interface PriceAlert {
+  coinId: string;
+  targetPrice: number;
+  isActive: boolean;
+}

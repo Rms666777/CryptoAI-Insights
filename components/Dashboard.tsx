@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getTopCoins } from '../services/cryptoService';
 import { analyzeMarket, analyzeSpecificCoin } from '../services/geminiService';
-import { CoinData, AnalysisType, AIProvider, AIPersona } from '../types';
+import { CoinData, AnalysisType, AIProvider, AIPersona, PriceAlert } from '../types';
 import CoinRow from './CoinRow';
 import InvestmentModal from './InvestmentModal';
+import AlertSetupModal from './AlertSetupModal';
 import { 
   BarChart3, Calendar, RefreshCcw, AlertTriangle, Search, Zap, 
   TrendingUp, TrendingDown, MinusCircle, Star, Activity, DollarSign
@@ -23,14 +24,19 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
   const [searchTerm, setSearchTerm] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   
-  // Investment Modal State
+  // Modals State
   const [investmentCoin, setInvestmentCoin] = useState<CoinData | null>(null);
+  const [alertCoin, setAlertCoin] = useState<CoinData | null>(null);
 
   useEffect(() => {
     fetchData();
     const savedFavs = localStorage.getItem('crypto_favs');
     if (savedFavs) setFavorites(JSON.parse(savedFavs));
+    
+    const savedAlerts = localStorage.getItem('crypto_alerts');
+    if (savedAlerts) setAlerts(JSON.parse(savedAlerts));
 
     // Handle Deep Link / Shared Link
     const params = new URLSearchParams(window.location.search);
@@ -46,6 +52,19 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
       : [...favorites, id];
     setFavorites(newFavs);
     localStorage.setItem('crypto_favs', JSON.stringify(newFavs));
+  };
+
+  const handleSaveAlert = (newAlert: PriceAlert) => {
+      const updatedAlerts = alerts.filter(a => a.coinId !== newAlert.coinId);
+      updatedAlerts.push(newAlert);
+      setAlerts(updatedAlerts);
+      localStorage.setItem('crypto_alerts', JSON.stringify(updatedAlerts));
+  };
+
+  const handleDeleteAlert = (coinId: string) => {
+      const updatedAlerts = alerts.filter(a => a.coinId !== coinId);
+      setAlerts(updatedAlerts);
+      localStorage.setItem('crypto_alerts', JSON.stringify(updatedAlerts));
   };
 
   const fetchData = async () => {
@@ -200,7 +219,10 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
                         key={coin.id} coin={coin} 
                         onAnalyze={handleCoinAnalysis} 
                         onInvest={setInvestmentCoin}
-                        isFavorite={favorites.includes(coin.id)} onToggleFavorite={toggleFavorite}
+                        isFavorite={favorites.includes(coin.id)} 
+                        onToggleFavorite={toggleFavorite}
+                        alert={alerts.find(a => a.coinId === coin.id)}
+                        onSetAlert={setAlertCoin}
                     />
                 ))
             ) : (
@@ -215,11 +237,20 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
             )}
         </div>
 
-        {/* Investment Simulation Modal */}
+        {/* Modals */}
         <InvestmentModal 
             isOpen={!!investmentCoin} 
             onClose={() => setInvestmentCoin(null)} 
             coin={investmentCoin} 
+        />
+        
+        <AlertSetupModal
+            isOpen={!!alertCoin}
+            onClose={() => setAlertCoin(null)}
+            coin={alertCoin}
+            currentAlert={alertCoin ? alerts.find(a => a.coinId === alertCoin.id) : undefined}
+            onSave={handleSaveAlert}
+            onDelete={handleDeleteAlert}
         />
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CoinData } from '../types';
+import { CoinData, PriceAlert } from '../types';
 import CryptoChart from './CryptoChart';
-import { TrendingUp, TrendingDown, BrainCircuit, Percent, Share2, Check, Star, Wallet, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, BrainCircuit, Percent, Share2, Check, Star, Wallet, ArrowRight, Bell, Zap } from 'lucide-react';
 
 interface CoinRowProps {
   coin: CoinData;
@@ -9,12 +9,26 @@ interface CoinRowProps {
   onInvest: (coin: CoinData) => void;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  alert: PriceAlert | undefined;
+  onSetAlert: (coin: CoinData) => void;
 }
 
-const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite, onToggleFavorite }) => {
+const CoinRow: React.FC<CoinRowProps> = ({ 
+    coin, onAnalyze, onInvest, 
+    isFavorite, onToggleFavorite,
+    alert, onSetAlert
+}) => {
   const [copied, setCopied] = useState(false);
   const priceChange = coin.price_change_percentage_24h ?? 0;
   const isPositive = priceChange >= 0;
+
+  // Logic to determine if "Significant AI Analysis" is likely available
+  // If volatility is high (> 3% or < -3%), suggest AI check
+  const hasSignificantInsight = Math.abs(priceChange) > 3;
+
+  // Logic to determine if alert is "triggered" (visual indication)
+  // Simple approximation: if price is very close to target (within 0.5%)
+  const isAlertTriggered = alert && Math.abs((coin.current_price - alert.targetPrice) / alert.targetPrice) < 0.005;
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -42,8 +56,14 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
   };
 
   return (
-    <div className="group glass-card hover:bg-slate-800/80 rounded-xl p-4 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+    <div className={`group glass-card hover:bg-slate-800/80 rounded-xl p-4 transition-all duration-200 border ${isAlertTriggered ? 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'border-slate-700/30'} hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5 relative overflow-hidden`}>
+      
+      {/* Significant Insight Glow Background */}
+      {hasSignificantInsight && (
+          <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center relative z-10">
         
         {/* Mobile Header: Name & Price */}
         <div className="md:col-span-4 flex items-center justify-between md:justify-start gap-3">
@@ -61,7 +81,10 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
                     </div>
                 </div>
                 <div>
-                    <h3 className="font-bold text-white text-base leading-tight">{coin.name}</h3>
+                    <h3 className="font-bold text-white text-base leading-tight flex items-center gap-2">
+                        {coin.name}
+                        {isAlertTriggered && <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>}
+                    </h3>
                     <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{coin.symbol}</span>
                 </div>
             </div>
@@ -82,6 +105,12 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
             <p className="font-bold text-white font-mono tracking-tight">
               ${coin.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) ?? '0.00'}
             </p>
+            {alert && (
+                <div className="text-[10px] text-slate-500 font-mono flex items-center justify-end gap-1">
+                    <Bell size={10} className={isAlertTriggered ? "text-amber-500 animate-bounce" : ""} /> 
+                    Alvo: ${alert.targetPrice.toLocaleString()}
+                </div>
+            )}
         </div>
 
         {/* Desktop Change */}
@@ -106,6 +135,15 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
 
         {/* Actions */}
         <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-2 pt-2 md:pt-0 border-t border-slate-800 md:border-t-0">
+            
+            <button
+                onClick={(e) => { e.stopPropagation(); onSetAlert(coin); }}
+                className={`p-2.5 rounded-xl transition-all border ${alert ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-amber-400 hover:border-amber-500/30'}`}
+                title="Configurar Alerta"
+            >
+                <Bell size={18} fill={alert ? "currentColor" : "none"} className={isAlertTriggered ? 'animate-shake' : ''} />
+            </button>
+
             <button
                 onClick={(e) => { e.stopPropagation(); onInvest(coin); }}
                 className="p-2.5 bg-slate-800/50 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/50 rounded-xl transition-all"
@@ -124,11 +162,13 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
             
             <button 
                 onClick={(e) => { e.stopPropagation(); onAnalyze(coin); }}
-                className="flex-1 md:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm font-semibold active:scale-95 group/btn"
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm font-semibold active:scale-95 group/btn relative overflow-hidden ${hasSignificantInsight ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/40 ring-1 ring-indigo-400 border-indigo-400' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20'}`}
             >
-                <BrainCircuit size={18} />
+                 {hasSignificantInsight && (
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-[shimmer_2s_infinite]"></span>
+                 )}
+                {hasSignificantInsight ? <Zap size={18} fill="currentColor" /> : <BrainCircuit size={18} />}
                 <span className="md:hidden xl:inline">IA</span>
-                <ArrowRight size={14} className="opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
             </button>
         </div>
       </div>
