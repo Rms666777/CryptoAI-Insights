@@ -31,14 +31,14 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onViewAnalysis }) => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-white">Histórico de Análises</h2>
-          <p className="text-slate-400">Reveja seus insights passados gerados pela IA.</p>
+          <h2 className="text-2xl font-bold text-white">Histórico</h2>
+          <p className="text-slate-400 text-sm">Reveja seus insights passados.</p>
         </div>
         
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
              <div className="relative flex-1 md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
                 <input 
@@ -46,13 +46,13 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onViewAnalysis }) => {
                     placeholder="Buscar moeda..." 
                     value={filterTerm}
                     onChange={(e) => setFilterTerm(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 text-white pl-9 pr-4 py-2 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full bg-slate-900 border border-slate-700 text-white pl-9 pr-4 py-3 sm:py-2 rounded-xl sm:rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                 />
             </div>
             <select 
                 value={providerFilter}
                 onChange={(e) => setProviderFilter(e.target.value)}
-                className="bg-slate-900 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none"
+                className="bg-slate-900 border border-slate-700 text-white text-sm rounded-xl sm:rounded-lg px-3 py-3 sm:py-2 focus:outline-none w-full sm:w-auto"
             >
                 <option value="ALL">Todas IAs</option>
                 <option value="GEMINI">Gemini</option>
@@ -92,7 +92,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onViewAnalysis }) => {
                 </div>
                 <button 
                     onClick={(e) => handleDelete(item.id, e)}
-                    className="text-slate-500 hover:text-rose-400 p-1 rounded hover:bg-slate-700 transition-colors"
+                    className="text-slate-500 hover:text-rose-400 p-2 rounded hover:bg-slate-700 transition-colors"
                     title="Excluir"
                 >
                     <Trash2 className="w-4 h-4" />

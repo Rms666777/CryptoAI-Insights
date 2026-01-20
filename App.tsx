@@ -115,6 +115,22 @@ const App: React.FC = () => {
         </div>
       </nav>
 
+      {/* Mobile Top Header (New) */}
+      <div className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-white/5 md:hidden px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+               <div className="bg-gradient-to-br from-indigo-600 to-violet-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20"><Cpu className="text-white w-4 h-4" /></div>
+               <span className="font-bold text-white tracking-tight">CryptoAI</span>
+          </div>
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide text-slate-400"
+          >
+              <span className="truncate max-w-[80px]">{currentPersona}</span>
+              <div className="w-px h-3 bg-slate-700"></div>
+              <Settings size={12} />
+          </button>
+      </div>
+
       {/* Main Content */}
       <main className="pb-20 md:pb-0 h-full">
         {renderPage()}
@@ -124,19 +140,19 @@ const App: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-white/5 md:hidden z-40 pb-safe">
         <div className="flex justify-around items-center h-16">
             <button onClick={() => setCurrentPage('dashboard')} className={`flex flex-col items-center gap-1 transition-colors ${currentPage === 'dashboard' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
-                <LayoutDashboard size={22} strokeWidth={currentPage === 'dashboard' ? 2.5 : 2} />
+                <LayoutDashboard size={20} strokeWidth={currentPage === 'dashboard' ? 2.5 : 2} />
                 <span className="text-[10px] font-medium">Mercado</span>
             </button>
             <button onClick={() => setCurrentPage('chat')} className={`flex flex-col items-center gap-1 transition-colors ${currentPage === 'chat' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
-                <MessageSquareText size={22} strokeWidth={currentPage === 'chat' ? 2.5 : 2} />
+                <MessageSquareText size={20} strokeWidth={currentPage === 'chat' ? 2.5 : 2} />
                 <span className="text-[10px] font-medium">Chat</span>
             </button>
             <button onClick={() => setCurrentPage('history')} className={`flex flex-col items-center gap-1 transition-colors ${currentPage === 'history' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
-                <History size={22} strokeWidth={currentPage === 'history' ? 2.5 : 2} />
+                <History size={20} strokeWidth={currentPage === 'history' ? 2.5 : 2} />
                 <span className="text-[10px] font-medium">Histórico</span>
             </button>
             <button onClick={() => setIsSettingsOpen(true)} className="flex flex-col items-center gap-1 text-slate-500 hover:text-indigo-400 transition-colors">
-                <Settings size={22} />
+                <Settings size={20} />
                 <span className="text-[10px] font-medium">Config</span>
             </button>
         </div>

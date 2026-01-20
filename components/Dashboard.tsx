@@ -146,13 +146,13 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
                         Acesse insights em tempo real gerados por inteligência artificial para tomar decisões mais assertivas.
                     </p>
                     
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <button onClick={() => handleGlobalAnalysis(AnalysisType.DAILY)} disabled={loadingData} 
-                            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all active:scale-95">
+                            className="flex-1 sm:flex-none justify-center px-4 py-3 sm:py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all active:scale-95">
                             <BarChart3 size={18} /> Resumo Diário
                         </button>
                         <button onClick={() => handleGlobalAnalysis(AnalysisType.WEEKLY)} disabled={loadingData} 
-                            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium border border-slate-700 flex items-center gap-2 transition-all active:scale-95">
+                            className="flex-1 sm:flex-none justify-center px-4 py-3 sm:py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-medium border border-slate-700 flex items-center gap-2 transition-all active:scale-95">
                             <Calendar size={18} /> Semanal
                         </button>
                     </div>
@@ -161,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
 
             {/* Stats Card */}
             <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
-                 <div className="glass-card rounded-2xl p-5 flex flex-col justify-center">
+                 <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-center">
                     <div className="flex items-center gap-2 text-slate-400 mb-2">
                         <Activity size={16} className="text-emerald-400" />
                         <span className="text-xs font-semibold uppercase">Top Mover (24h)</span>
@@ -176,7 +176,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
                     ) : <span>-</span>}
                  </div>
 
-                 <div className="glass-card rounded-2xl p-5 flex flex-col justify-center">
+                 <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-center">
                     <div className="flex items-center gap-2 text-slate-400 mb-2">
                         <DollarSign size={16} className="text-blue-400" />
                         <span className="text-xs font-semibold uppercase">Market Cap (Top 20)</span>
@@ -193,7 +193,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
         </div>
 
         {/* Filters */}
-        <div className="sticky top-[72px] z-20 bg-slate-950/80 backdrop-blur-xl py-4 mb-2 -mx-4 px-4 border-b border-slate-800/50 md:static md:bg-transparent md:border-none md:p-0 md:mx-0">
+        <div className="sticky top-0 sm:top-[72px] z-20 bg-slate-950/90 backdrop-blur-xl py-3 mb-2 -mx-4 px-4 border-b border-slate-800/50 md:static md:bg-transparent md:border-none md:p-0 md:mx-0">
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1 group">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 group-focus-within:text-indigo-400 transition-colors" />
@@ -206,10 +206,10 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
                 <div className="flex gap-2">
                     <button 
                         onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                        className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${showFavoritesOnly ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'}`}
+                        className={`flex-1 sm:flex-none px-4 py-2 rounded-xl border flex items-center justify-center gap-2 transition-all ${showFavoritesOnly ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'}`}
                     >
                         <Star size={18} fill={showFavoritesOnly ? "currentColor" : "none"} />
-                        <span className="hidden sm:inline text-sm font-medium">Favoritos</span>
+                        <span className="text-sm font-medium">Favoritos</span>
                     </button>
                     <button onClick={fetchData} className="p-3 bg-slate-900 border border-slate-700 text-slate-400 hover:text-white rounded-xl hover:border-slate-600 transition-all active:scale-95">
                         <RefreshCcw size={18} className={loadingData ? 'animate-spin' : ''} />
@@ -228,7 +228,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
         </div>
 
         {/* List */}
-        <div className="space-y-3">
+        <div className="space-y-3 pb-8">
             {loadingData && coins.length === 0 ? (
                 Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-slate-800/30 border border-white/5 rounded-xl animate-pulse"></div>)
             ) : filteredCoins.length > 0 ? (

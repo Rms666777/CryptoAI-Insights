@@ -81,7 +81,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex justify-between items-center mb-3">
                     <span className="text-sm font-bold text-slate-300 flex items-center gap-2">
                         {userProfile.isPro ? <Crown size={16} className="text-amber-400 fill-amber-400" /> : <UserCheck size={16} />}
-                        {userProfile.email}
+                        <span className="truncate max-w-[150px]">{userProfile.email}</span>
                     </span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${userProfile.isPro ? 'bg-indigo-500 text-white' : 'bg-slate-600 text-slate-300'}`}>
                         {userProfile.isPro ? 'PRO' : 'GRÁTIS'}
@@ -130,9 +130,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             <div className={`p-2 rounded-md ${tempProvider === p.id ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
                                 {p.icon}
                             </div>
-                            <div>
-                                <div className={`font-medium ${tempProvider === p.id ? 'text-white' : 'text-slate-300'}`}>{p.name}</div>
-                                <div className="text-xs text-slate-500">{p.desc}</div>
+                            <div className="min-w-0">
+                                <div className={`font-medium truncate ${tempProvider === p.id ? 'text-white' : 'text-slate-300'}`}>{p.name}</div>
+                                <div className="text-xs text-slate-500 truncate">{p.desc}</div>
                             </div>
                         </button>
                     ))}
@@ -166,7 +166,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             {showOpenRouterSettings && (
                 <div className="animate-in fade-in slide-in-from-top-4">
                     <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-indigo-400" /> Modelo OpenRouter Específico
+                        <AlertCircle className="w-4 h-4 text-indigo-400" /> Modelo OpenRouter
                     </h3>
                     <input 
                         type="text" 
@@ -184,12 +184,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     tempModel === model.id ? 'bg-slate-700 text-white border-slate-500' : 'bg-slate-800 text-slate-400 border-slate-700'
                                 }`}
                             >
-                                <span className="block font-bold">{model.name}</span>
-                                <span className="text-[10px] opacity-70">{model.id}</span>
+                                <span className="block font-bold truncate">{model.name}</span>
+                                <span className="text-[10px] opacity-70 truncate">{model.id}</span>
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">Selecione um modelo da lista ou digite o ID do OpenRouter.</p>
                 </div>
             )}
         </div>
@@ -197,7 +196,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="p-4 border-t border-slate-800 bg-slate-900/50 rounded-b-xl flex justify-end gap-3 shrink-0">
             <button onClick={onClose} className="px-4 py-2 text-slate-300 hover:text-white text-sm">Cancelar</button>
             <button onClick={handleSave} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-indigo-500/20">
-                Salvar Configurações
+                Salvar
             </button>
         </div>
       </div>

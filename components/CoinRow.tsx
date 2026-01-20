@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CoinData, PriceAlert } from '../types';
 import CryptoChart from './CryptoChart';
-import { TrendingUp, TrendingDown, BrainCircuit, Percent, Share2, Check, Star, Wallet, ArrowRight, Bell, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, BrainCircuit, Percent, Share2, Check, Star, Wallet, ArrowRight, Bell, Zap, Trophy } from 'lucide-react';
 
 interface CoinRowProps {
   coin: CoinData;
@@ -85,7 +85,14 @@ const CoinRow: React.FC<CoinRowProps> = ({
                         {coin.name}
                         {isAlertTriggered && <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>}
                     </h3>
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{coin.symbol}</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{coin.symbol}</span>
+                        {coin.roi && (
+                             <span className="flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono font-bold border border-amber-500/20 md:hidden" title="ROI (Retorno sobre Investimento)">
+                                <Trophy size={8} /> {coin.roi.times.toFixed(1)}x
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
             
@@ -113,12 +120,18 @@ const CoinRow: React.FC<CoinRowProps> = ({
             )}
         </div>
 
-        {/* Desktop Change */}
-        <div className="hidden md:block col-span-2 text-right">
+        {/* Desktop Change & ROI */}
+        <div className="hidden md:flex flex-col items-end col-span-2 text-right">
              <div className={`inline-flex items-center gap-1 font-mono font-bold px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                 {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 {Math.abs(priceChange).toFixed(2)}%
             </div>
+            {coin.roi && (
+                <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-500 font-mono font-bold opacity-80" title={`Retorno sobre Investimento (${coin.roi.currency.toUpperCase()})`}>
+                    <Trophy size={10} />
+                    ROI: +{coin.roi.percentage.toLocaleString(undefined, {maximumFractionDigits: 0})}% ({coin.roi.times.toFixed(2)}x)
+                </div>
+            )}
         </div>
 
         {/* Chart */}
