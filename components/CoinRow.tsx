@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CoinData } from '../types';
 import CryptoChart from './CryptoChart';
-import { TrendingUp, TrendingDown, BrainCircuit, Percent, Share2, Check, Star, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, BrainCircuit, Percent, Share2, Check, Star, Wallet, ArrowRight } from 'lucide-react';
 
 interface CoinRowProps {
   coin: CoinData;
@@ -18,10 +18,16 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Construct a URL that triggers the search for this coin
+    const url = new URL(window.location.href);
+    url.searchParams.set('coin', coin.id);
+    const shareUrl = url.toString();
+
     const shareData = {
-      title: `Análise: ${coin.name}`,
-      text: `${coin.name} ($${coin.symbol.toUpperCase()}) - $${coin.current_price}. Análise CryptoAI.`,
-      url: window.location.href
+      title: `Análise CryptoAI: ${coin.name}`,
+      text: `Confira a análise de IA para ${coin.name} ($${coin.symbol.toUpperCase()}). Preço: $${coin.current_price}.`,
+      url: shareUrl
     };
 
     if (navigator.share) {
@@ -36,84 +42,93 @@ const CoinRow: React.FC<CoinRowProps> = ({ coin, onAnalyze, onInvest, isFavorite
   };
 
   return (
-    <div className="group relative bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-indigo-500/50 rounded-xl p-4 transition-all duration-300">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="group glass-card hover:bg-slate-800/80 rounded-xl p-4 transition-all duration-200 border border-slate-700/30 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
         
-        {/* Name, Rank, Favorite */}
-        <div className="flex items-center gap-3 min-w-[200px] w-full md:w-auto">
-          <button 
-            onClick={(e) => { e.stopPropagation(); onToggleFavorite(coin.id); }}
-            className={`p-1.5 rounded-full transition-colors ${isFavorite ? 'text-amber-400 bg-amber-400/10' : 'text-slate-600 hover:text-slate-400'}`}
-          >
-            <Star size={18} fill={isFavorite ? "currentColor" : "none"} />
-          </button>
-          <span className="text-slate-500 font-mono text-sm w-6">#{coin.market_cap_rank}</span>
-          <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
-          <div>
-            <h3 className="font-bold text-white">{coin.name}</h3>
-            <span className="text-xs text-slate-400 uppercase">{coin.symbol}</span>
-          </div>
+        {/* Mobile Header: Name & Price */}
+        <div className="md:col-span-4 flex items-center justify-between md:justify-start gap-3">
+            <div className="flex items-center gap-3">
+                 <button 
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(coin.id); }}
+                    className={`p-2 -ml-2 rounded-full transition-colors ${isFavorite ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400 hover:bg-white/5'}`}
+                >
+                    <Star size={18} fill={isFavorite ? "currentColor" : "none"} />
+                </button>
+                <div className="relative">
+                    <img src={coin.image} alt={coin.name} className="w-10 h-10 rounded-full bg-white/5 p-0.5" />
+                    <div className="absolute -bottom-1 -right-1 bg-slate-900 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-700 text-slate-300">
+                        #{coin.market_cap_rank}
+                    </div>
+                </div>
+                <div>
+                    <h3 className="font-bold text-white text-base leading-tight">{coin.name}</h3>
+                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">{coin.symbol}</span>
+                </div>
+            </div>
+            
+            {/* Mobile Only Price */}
+            <div className="md:hidden text-right">
+                <p className="font-bold text-white font-mono text-base">
+                  ${coin.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                </p>
+                <div className={`flex items-center justify-end gap-1 text-xs font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                   {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
+                </div>
+            </div>
         </div>
 
-        {/* Price Info */}
-        <div className="flex items-center gap-8 flex-1 justify-between w-full md:w-auto">
-          <div className="text-right">
-            <p className="text-slate-400 text-xs mb-1">Preço Atual</p>
-            <p className="font-medium text-white">
+        {/* Desktop Price */}
+        <div className="hidden md:block col-span-2 text-right">
+            <p className="font-bold text-white font-mono tracking-tight">
               ${coin.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) ?? '0.00'}
             </p>
-          </div>
+        </div>
 
-          <div className="text-right">
-            <p className="text-slate-400 text-xs mb-1">24h %</p>
-            <div className={`flex items-center justify-end gap-1 font-medium ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {isPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-              {priceChange.toFixed(2)}%
+        {/* Desktop Change */}
+        <div className="hidden md:block col-span-2 text-right">
+             <div className={`inline-flex items-center gap-1 font-mono font-bold px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                {isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                {Math.abs(priceChange).toFixed(2)}%
             </div>
-          </div>
-          
-          <div className="hidden lg:block text-right">
-             <p className="text-slate-400 text-xs mb-1">Mkt Cap</p>
-             <p className="text-slate-200 text-sm">${(coin.market_cap / 1e9).toFixed(2)} B</p>
-          </div>
         </div>
 
         {/* Chart */}
-        <div className="hidden sm:block">
+        <div className="col-span-12 md:col-span-2 h-12 flex justify-center md:justify-center items-center opacity-70 group-hover:opacity-100 transition-opacity">
             {coin.sparkline_in_7d && (
-                <CryptoChart 
-                    data={coin.sparkline_in_7d.price} 
-                    color={isPositive ? '#34d399' : '#fb7185'} 
-                />
+                <div className="w-full h-full max-w-[120px]">
+                    <CryptoChart 
+                        data={coin.sparkline_in_7d.price} 
+                        color={isPositive ? '#34d399' : '#fb7185'} 
+                    />
+                </div>
             )}
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-2 pt-2 md:pt-0 border-t border-slate-800 md:border-t-0">
             <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onInvest(coin);
-                }}
-                className="px-3 py-2 bg-slate-700 hover:bg-emerald-600 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center justify-center"
-                title="Investir / Simular"
+                onClick={(e) => { e.stopPropagation(); onInvest(coin); }}
+                className="p-2.5 bg-slate-800/50 hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/50 rounded-xl transition-all"
+                title="Investir"
             >
                 <Wallet size={18} />
             </button>
 
             <button
                 onClick={handleShare}
-                className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center justify-center"
+                className="p-2.5 bg-slate-800/50 hover:bg-sky-500/20 text-slate-400 hover:text-sky-400 border border-slate-700 hover:border-sky-500/50 rounded-xl transition-all"
+                title="Copiar Link de Análise"
             >
                 {copied ? <Check size={18} className="text-emerald-400" /> : <Share2 size={18} />}
             </button>
             
             <button 
                 onClick={(e) => { e.stopPropagation(); onAnalyze(coin); }}
-                className="flex-1 md:flex-none px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap shadow-lg shadow-indigo-600/20"
+                className="flex-1 md:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm font-semibold active:scale-95 group/btn"
             >
-                <BrainCircuit size={16} />
-                <span className="md:hidden xl:inline">IA Analisar</span>
+                <BrainCircuit size={18} />
+                <span className="md:hidden xl:inline">IA</span>
+                <ArrowRight size={14} className="opacity-0 -ml-2 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all" />
             </button>
         </div>
       </div>
