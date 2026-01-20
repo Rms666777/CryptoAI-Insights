@@ -3,7 +3,7 @@ import { Send, Bot, User, Sparkles, BookOpen, TrendingUp, HelpCircle, Graduation
 import ReactMarkdown from 'react-markdown';
 import { sendChatMessage } from '../services/geminiService';
 import { ChatMessage } from '../types';
-import { canUseAI, incrementUsage } from '../services/userService';
+import { canUseAI, incrementUsage, generateUUID } from '../services/userService';
 import SubscriptionModal from './SubscriptionModal';
 
 const SUGGESTIONS = [
@@ -45,7 +45,7 @@ const ChatView: React.FC = () => {
     }
 
     const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       role: 'user',
       text: text,
       timestamp: Date.now()
@@ -60,7 +60,7 @@ const ChatView: React.FC = () => {
       const responseText = await sendChatMessage(messages, text);
       
       const aiMsg: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         role: 'ai',
         text: responseText,
         timestamp: Date.now()
@@ -70,7 +70,7 @@ const ChatView: React.FC = () => {
       incrementUsage(); // Count usage
     } catch (error) {
        const errorMsg: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         role: 'ai',
         text: "Desculpe, tive um problema ao processar sua resposta. Tente novamente.",
         timestamp: Date.now()

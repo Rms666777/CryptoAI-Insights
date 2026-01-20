@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTopCoins } from '../services/cryptoService';
 import { analyzeMarket, analyzeSpecificCoin } from '../services/geminiService';
 import { CoinData, AnalysisType, AIProvider, AIPersona, PriceAlert } from '../types';
-import { canUseAI, incrementUsage } from '../services/userService';
+import { canUseAI, incrementUsage, storage } from '../services/userService';
 import CoinRow from './CoinRow';
 import InvestmentModal from './InvestmentModal';
 import AlertSetupModal from './AlertSetupModal';
@@ -35,10 +35,10 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
 
   useEffect(() => {
     fetchData();
-    const savedFavs = localStorage.getItem('crypto_favs');
+    const savedFavs = storage.getItem('crypto_favs');
     if (savedFavs) setFavorites(JSON.parse(savedFavs));
     
-    const savedAlerts = localStorage.getItem('crypto_alerts');
+    const savedAlerts = storage.getItem('crypto_alerts');
     if (savedAlerts) setAlerts(JSON.parse(savedAlerts));
 
     // Handle Deep Link / Shared Link
@@ -54,20 +54,20 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
       ? favorites.filter(f => f !== id) 
       : [...favorites, id];
     setFavorites(newFavs);
-    localStorage.setItem('crypto_favs', JSON.stringify(newFavs));
+    storage.setItem('crypto_favs', JSON.stringify(newFavs));
   };
 
   const handleSaveAlert = (newAlert: PriceAlert) => {
       const updatedAlerts = alerts.filter(a => a.coinId !== newAlert.coinId);
       updatedAlerts.push(newAlert);
       setAlerts(updatedAlerts);
-      localStorage.setItem('crypto_alerts', JSON.stringify(updatedAlerts));
+      storage.setItem('crypto_alerts', JSON.stringify(updatedAlerts));
   };
 
   const handleDeleteAlert = (coinId: string) => {
       const updatedAlerts = alerts.filter(a => a.coinId !== coinId);
       setAlerts(updatedAlerts);
-      localStorage.setItem('crypto_alerts', JSON.stringify(updatedAlerts));
+      storage.setItem('crypto_alerts', JSON.stringify(updatedAlerts));
   };
 
   const fetchData = async () => {

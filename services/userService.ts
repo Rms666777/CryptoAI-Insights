@@ -3,6 +3,55 @@ import { UserProfile } from '../types';
 const CURRENT_USER_KEY = 'crypto_ai_current_session';
 const USER_PREFIX = 'crypto_user_';
 
+// --- UTILITIES ---
+
+export const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      // Fallback if crypto is available but randomUUID fails
+    }
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+export const storage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn('LocalStorage access denied', e);
+    }
+    return null;
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, value);
+      }
+    } catch (e) {
+      console.warn('LocalStorage write failed', e);
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.warn('LocalStorage remove failed', e);
+    }
+  }
+};
+
+// --- USER MANAGEMENT ---
+
 const defaultProfile = (email: string): UserProfile => ({
   email,
   isPro: false,
@@ -10,30 +59,17 @@ const defaultProfile = (email: string): UserProfile => ({
   maxFreeUsage: 5
 });
 
-// Helper for safe storage access
-const safeStorage = {
-  getItem: (key: string) => {
-    try { return localStorage.getItem(key); } catch (e) { return null; }
-  },
-  setItem: (key: string, value: string) => {
-    try { localStorage.setItem(key, value); } catch (e) { }
-  },
-  removeItem: (key: string) => {
-    try { localStorage.removeItem(key); } catch (e) { }
-  }
-};
-
 export const loginUser = (email: string): UserProfile => {
-  safeStorage.setItem(CURRENT_USER_KEY, email);
+  storage.setItem(CURRENT_USER_KEY, email);
   return getUserProfile();
 };
 
 export const logoutUser = () => {
-  safeStorage.removeItem(CURRENT_USER_KEY);
+  storage.removeItem(CURRENT_USER_KEY);
 };
 
 export const getCurrentUserEmail = (): string | null => {
-  return safeStorage.getItem(CURRENT_USER_KEY);
+  return storage.getItem(CURRENT_USER_KEY);
 };
 
 export const getUserProfile = (): UserProfile => {
@@ -41,11 +77,11 @@ export const getUserProfile = (): UserProfile => {
   if (!email) return defaultProfile('guest');
 
   const storageKey = `${USER_PREFIX}${email}`;
-  const stored = safeStorage.getItem(storageKey);
+  const stored = storage.getItem(storageKey);
   
   if (!stored) {
     const newProfile = defaultProfile(email);
-    safeStorage.setItem(storageKey, JSON.stringify(newProfile));
+    storage.setItem(storageKey, JSON.stringify(newProfile));
     return newProfile;
   }
   
@@ -55,7 +91,7 @@ export const getUserProfile = (): UserProfile => {
 const saveProfile = (profile: UserProfile) => {
   if (!profile.email || profile.email === 'guest') return;
   const storageKey = `${USER_PREFIX}${profile.email}`;
-  safeStorage.setItem(storageKey, JSON.stringify(profile));
+  storage.setItem(storageKey, JSON.stringify(profile));
 };
 
 export const incrementUsage = (): UserProfile => {

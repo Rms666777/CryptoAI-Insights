@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getUserHistory, deleteHistoryItem, HistoricalAnalysis } from '../services/geminiService';
-import { Trash2, Search, Calendar, Cpu, ExternalLink, Filter } from 'lucide-react';
+import { Trash2, Search, Calendar, Cpu, ExternalLink, Filter, DollarSign } from 'lucide-react';
 
 interface HistoryViewProps {
   onViewAnalysis: (title: string, content: string) => void;
@@ -79,9 +79,16 @@ const HistoryView: React.FC<HistoryViewProps> = ({ onViewAnalysis }) => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="font-bold text-white text-lg">{item.coinName}</h3>
-                    <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-slate-700 text-slate-300">
-                        {item.provider}
-                    </span>
+                    <div className="flex gap-2 mt-1">
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-slate-700 text-slate-300">
+                          {item.provider}
+                      </span>
+                      {item.priceAtAnalysis && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                             <DollarSign size={8} /> {item.priceAtAnalysis.toLocaleString()}
+                          </span>
+                      )}
+                    </div>
                 </div>
                 <button 
                     onClick={(e) => handleDelete(item.id, e)}

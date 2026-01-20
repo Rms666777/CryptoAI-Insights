@@ -1,14 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { CoinData, AnalysisType, AIProvider, AIPersona, ChatMessage } from '../types';
-import { getCurrentUserEmail } from './userService';
+import { getCurrentUserEmail, generateUUID, storage } from './userService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-// Configured Key for the project
 const OPENROUTER_API_KEY = "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";
 
 // --- CACHE & HISTORY CONFIGURATION ---
 const CACHE_TTL = 1000 * 60 * 15; // 15 minutes cache for specific coin analysis
-// Note: HISTORY_STORAGE_KEY is now dynamic based on user
 
 interface CacheEntry {
   content: string;
@@ -25,53 +23,10 @@ export interface HistoricalAnalysis {
   coinName: string;
   date: string;
   provider: string;
-  summary: string; // Storing a snippet or the full text
-  fullContent: string; // Store full markdown
+  summary: string;
+  fullContent: string;
+  priceAtAnalysis?: number;
 }
-
-// --- SAFE STORAGE IMPLEMENTATION ---
-const createSafeStorage = () => {
-  let memoryStorage: Record<string, string> = {};
-  let isLocalStorageAvailable = false;
-
-  try {
-    if (typeof localStorage !== 'undefined') {
-        const testKey = '__test_storage__';
-        localStorage.setItem(testKey, testKey);
-        localStorage.removeItem(testKey);
-        isLocalStorageAvailable = true;
-    }
-  } catch (e) {
-    // LocalStorage blocked or unavailable
-    isLocalStorageAvailable = false;
-  }
-
-  return {
-    getItem: (key: string): string | null => {
-      if (isLocalStorageAvailable) {
-        try {
-            return localStorage.getItem(key);
-        } catch (e) {
-            return memoryStorage[key] || null;
-        }
-      }
-      return memoryStorage[key] || null;
-    },
-    setItem: (key: string, value: string) => {
-      if (isLocalStorageAvailable) {
-        try {
-          localStorage.setItem(key, value);
-        } catch (e) {
-          memoryStorage[key] = value;
-        }
-      } else {
-        memoryStorage[key] = value;
-      }
-    }
-  };
-};
-
-const storage = createSafeStorage();
 
 // --- HELPER FUNCTIONS ---
 
@@ -117,17 +72,18 @@ const getHistoryContext = (): string => {
   }
 };
 
-const saveToHistory = (coinName: string, content: string, provider: AIProvider) => {
+const saveToHistory = (coinName: string, content: string, provider: AIProvider, price?: number) => {
   try {
     const key = getHistoryKey();
     const history = getUserHistory();
     const newEntry: HistoricalAnalysis = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       coinName,
       date: new Date().toISOString(),
       provider,
       summary: content.substring(0, 150) + "...",
-      fullContent: content
+      fullContent: content,
+      priceAtAnalysis: price
     };
     const updatedHistory = [newEntry, ...history].slice(0, 50);
     storage.setItem(key, JSON.stringify(updatedHistory));
@@ -255,7 +211,7 @@ export const analyzeSpecificCoin = async (
         else result = await callGemini(prompt, systemInstruction);
 
         analysisCache.set(cacheKey, { content: result, timestamp: Date.now(), provider, persona });
-        saveToHistory(coin.name, result, provider);
+        saveToHistory(coin.name, result, provider, coin.current_price);
         return result;
     } catch (e) { return `Erro: ${(e as Error).message}`; }
 };
