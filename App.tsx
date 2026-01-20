@@ -100,6 +100,7 @@ const App: React.FC = () => {
         isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
         currentModel={openRouterModel} onSaveModel={setOpenRouterModel}
         currentPersona={currentPersona} onSavePersona={setCurrentPersona}
+        currentProvider={selectedProvider} onSaveProvider={setSelectedProvider}
       />
     </div>
   );

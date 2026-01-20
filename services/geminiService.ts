@@ -2,7 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { CoinData, AnalysisType, AIProvider, AIPersona } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+// Configured Key for the project
+const OPENROUTER_API_KEY = "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";
 
 // --- CACHE & HISTORY CONFIGURATION ---
 const CACHE_TTL = 1000 * 60 * 15; // 15 minutes cache for specific coin analysis
