@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
-import { CoinData, AnalysisType, AIProvider, AIPersona } from '../types';
+import { CoinData, AnalysisType, AIProvider, AIPersona, ChatMessage } from '../types';
+import { getCurrentUserEmail } from './userService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 // Configured Key for the project
@@ -7,7 +8,7 @@ const OPENROUTER_API_KEY = "sk-or-v1-d3f652a77f713a02942301329e6d56fad03411753ba
 
 // --- CACHE & HISTORY CONFIGURATION ---
 const CACHE_TTL = 1000 * 60 * 15; // 15 minutes cache for specific coin analysis
-const HISTORY_STORAGE_KEY = 'crypto_ai_history_db';
+// Note: HISTORY_STORAGE_KEY is now dynamic based on user
 
 interface CacheEntry {
   content: string;
@@ -51,7 +52,6 @@ const createSafeStorage = () => {
         try {
             return localStorage.getItem(key);
         } catch (e) {
-            // Fallback if individual read fails
             return memoryStorage[key] || null;
         }
       }
@@ -62,7 +62,6 @@ const createSafeStorage = () => {
         try {
           localStorage.setItem(key, value);
         } catch (e) {
-          // Fallback if write fails (quota or security)
           memoryStorage[key] = value;
         }
       } else {
@@ -76,9 +75,15 @@ const storage = createSafeStorage();
 
 // --- HELPER FUNCTIONS ---
 
+const getHistoryKey = () => {
+    const email = getCurrentUserEmail() || 'guest';
+    return `crypto_history_${email}`;
+};
+
 export const getUserHistory = (): HistoricalAnalysis[] => {
     try {
-        const historyJson = storage.getItem(HISTORY_STORAGE_KEY);
+        const key = getHistoryKey();
+        const historyJson = storage.getItem(key);
         return historyJson ? JSON.parse(historyJson) : [];
     } catch (e) {
         return [];
@@ -87,9 +92,10 @@ export const getUserHistory = (): HistoricalAnalysis[] => {
 
 export const deleteHistoryItem = (id: string): HistoricalAnalysis[] => {
     try {
+        const key = getHistoryKey();
         const history = getUserHistory();
         const newHistory = history.filter(item => item.id !== id);
-        storage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(newHistory));
+        storage.setItem(key, JSON.stringify(newHistory));
         return newHistory;
     } catch (e) {
         console.error("Error deleting item", e);
@@ -105,7 +111,7 @@ const getHistoryContext = (): string => {
     ).join('\n');
 
     if (!recentHistory) return "";
-    return `\n\nCONTEXTO DO USUÁRIO:\n${recentHistory}`;
+    return `\n\nCONTEXTO DO USUÁRIO (Análises anteriores):\n${recentHistory}`;
   } catch (e) {
     return "";
   }
@@ -113,6 +119,7 @@ const getHistoryContext = (): string => {
 
 const saveToHistory = (coinName: string, content: string, provider: AIProvider) => {
   try {
+    const key = getHistoryKey();
     const history = getUserHistory();
     const newEntry: HistoricalAnalysis = {
       id: crypto.randomUUID(),
@@ -123,7 +130,7 @@ const saveToHistory = (coinName: string, content: string, provider: AIProvider) 
       fullContent: content
     };
     const updatedHistory = [newEntry, ...history].slice(0, 50);
-    storage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updatedHistory));
+    storage.setItem(key, JSON.stringify(updatedHistory));
   } catch (e) {
     console.error("Error saving history", e);
   }
@@ -251,4 +258,41 @@ export const analyzeSpecificCoin = async (
         saveToHistory(coin.name, result, provider);
         return result;
     } catch (e) { return `Erro: ${(e as Error).message}`; }
+};
+
+export const sendChatMessage = async (
+    history: ChatMessage[],
+    newMessage: string
+): Promise<string> => {
+    // Construct a context string from recent history (last 5 messages)
+    const context = history.slice(-6).map(msg => `${msg.role === 'user' ? 'Usuário' : 'Especialista'}: ${msg.text}`).join('\n');
+    
+    const prompt = `CONTEXTO DA CONVERSA:\n${context}\n\nNOVA PERGUNTA DO USUÁRIO: ${newMessage}`;
+
+    const systemInstruction = `
+    Você é o "CryptoMentor", um especialista em educação financeira e criptomoedas.
+    
+    SEU OBJETIVO:
+    1. Ensinar iniciantes sobre conceitos de blockchain e cripto (DeFi, NFTs, Staking, etc).
+    2. Analisar tendências de mercado para usuários intermediários.
+    
+    DIRETRIZES:
+    - Use Markdown rico (negrito, listas, code blocks).
+    - Seja extremamente didático e paciente.
+    - Use analogias do mundo real para explicar conceitos técnicos.
+    - Se perguntarem "Vale a pena comprar X?", explique os riscos e os fundamentos, nunca dê conselho financeiro direto "Sim/Não".
+    - Responda em Português do Brasil.
+    - Mantenha respostas concisas, evite textões enormes a menos que solicitado.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: { systemInstruction, temperature: 0.6 }
+        });
+        return response.text || "Desculpe, não consegui processar sua pergunta.";
+    } catch (e) {
+        return "Erro ao conectar com o CryptoMentor. Tente novamente.";
+    }
 };

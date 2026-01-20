@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AIProvider, AIPersona } from './types';
 import AnalysisModal from './components/AnalysisModal';
 import SettingsModal from './components/SettingsModal';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import HistoryView from './components/HistoryView';
+import ChatView from './components/ChatView';
 import InstallPWA from './components/InstallPWA';
-import { Cpu, LayoutDashboard, History, Settings, LogOut, User } from 'lucide-react';
+import { loginUser, logoutUser, getCurrentUserEmail } from './services/userService';
+import { Cpu, LayoutDashboard, History, Settings, LogOut, User, MessageSquareText } from 'lucide-react';
 
-type Page = 'dashboard' | 'history';
+type Page = 'dashboard' | 'history' | 'chat';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,6 +28,26 @@ const App: React.FC = () => {
   const [analysisContent, setAnalysisContent] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  useEffect(() => {
+      // Check for existing session
+      const userEmail = getCurrentUserEmail();
+      if (userEmail) {
+          setIsAuthenticated(true);
+      }
+  }, []);
+
+  const handleLogin = (email: string) => {
+      loginUser(email);
+      setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+      logoutUser();
+      setIsAuthenticated(false);
+      setIsSettingsOpen(false);
+      setCurrentPage('dashboard');
+  };
+
   const handleShowModal = (title: string, content: string, isLoading: boolean) => {
       setModalTitle(title);
       setAnalysisContent(content);
@@ -33,7 +55,25 @@ const App: React.FC = () => {
       setIsModalOpen(true);
   };
 
-  if (!isAuthenticated) return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+  const renderPage = () => {
+      switch(currentPage) {
+          case 'dashboard':
+              return <Dashboard 
+                selectedProvider={selectedProvider} 
+                openRouterModel={openRouterModel}
+                currentPersona={currentPersona}
+                onShowModal={handleShowModal} 
+            />;
+          case 'history':
+              return <HistoryView onViewAnalysis={(t, c) => handleShowModal(t, c, false)} />;
+          case 'chat':
+              return <ChatView />;
+          default:
+              return null;
+      }
+  }
+
+  if (!isAuthenticated) return <LoginPage onLogin={handleLogin} />;
 
   return (
     <div className="min-h-screen font-sans text-slate-200 pb-safe selection:bg-indigo-500/30">
@@ -53,6 +93,12 @@ const App: React.FC = () => {
                     Mercado
                 </button>
                 <button 
+                    onClick={() => setCurrentPage('chat')} 
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${currentPage === 'chat' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                >
+                    Aprender (Chat)
+                </button>
+                <button 
                     onClick={() => setCurrentPage('history')} 
                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${currentPage === 'history' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                 >
@@ -70,17 +116,8 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="pb-20 md:pb-0">
-        {currentPage === 'dashboard' ? (
-            <Dashboard 
-                selectedProvider={selectedProvider} 
-                openRouterModel={openRouterModel}
-                currentPersona={currentPersona}
-                onShowModal={handleShowModal} 
-            />
-        ) : (
-            <HistoryView onViewAnalysis={(t, c) => handleShowModal(t, c, false)} />
-        )}
+      <main className="pb-20 md:pb-0 h-full">
+        {renderPage()}
       </main>
 
       {/* Mobile Bottom Navigation */}
@@ -89,6 +126,10 @@ const App: React.FC = () => {
             <button onClick={() => setCurrentPage('dashboard')} className={`flex flex-col items-center gap-1 transition-colors ${currentPage === 'dashboard' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
                 <LayoutDashboard size={22} strokeWidth={currentPage === 'dashboard' ? 2.5 : 2} />
                 <span className="text-[10px] font-medium">Mercado</span>
+            </button>
+            <button onClick={() => setCurrentPage('chat')} className={`flex flex-col items-center gap-1 transition-colors ${currentPage === 'chat' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                <MessageSquareText size={22} strokeWidth={currentPage === 'chat' ? 2.5 : 2} />
+                <span className="text-[10px] font-medium">Chat</span>
             </button>
             <button onClick={() => setCurrentPage('history')} className={`flex flex-col items-center gap-1 transition-colors ${currentPage === 'history' ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
                 <History size={22} strokeWidth={currentPage === 'history' ? 2.5 : 2} />
@@ -113,6 +154,7 @@ const App: React.FC = () => {
         currentModel={openRouterModel} onSaveModel={setOpenRouterModel}
         currentPersona={currentPersona} onSavePersona={setCurrentPersona}
         currentProvider={selectedProvider} onSaveProvider={setSelectedProvider}
+        onLogout={handleLogout}
       />
     </div>
   );

@@ -62,3 +62,18 @@ export interface PriceAlert {
   targetPrice: number;
   isActive: boolean;
 }
+
+export interface UserProfile {
+  email: string;
+  isPro: boolean;
+  freeUsageCount: number;
+  maxFreeUsage: number;
+  subscriptionDate?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'ai';
+  text: string;
+  timestamp: number;
+}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Cpu, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: () => void;
+  onLogin: (email: string) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -12,11 +12,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if(!email) return;
+    
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      onLogin();
+      onLogin(email);
     }, 1500);
   };
 
@@ -24,7 +26,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       setIsLoading(true);
       setTimeout(() => {
         setIsLoading(false);
-        onLogin();
+        // Simulate a Google User
+        onLogin('google_user@gmail.com');
       }, 1000);
   }
 

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getTopCoins } from '../services/cryptoService';
 import { analyzeMarket, analyzeSpecificCoin } from '../services/geminiService';
 import { CoinData, AnalysisType, AIProvider, AIPersona, PriceAlert } from '../types';
+import { canUseAI, incrementUsage } from '../services/userService';
 import CoinRow from './CoinRow';
 import InvestmentModal from './InvestmentModal';
 import AlertSetupModal from './AlertSetupModal';
+import SubscriptionModal from './SubscriptionModal';
 import { 
   BarChart3, Calendar, RefreshCcw, AlertTriangle, Search, Zap, 
   TrendingUp, TrendingDown, MinusCircle, Star, Activity, DollarSign
@@ -29,6 +31,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
   // Modals State
   const [investmentCoin, setInvestmentCoin] = useState<CoinData | null>(null);
   const [alertCoin, setAlertCoin] = useState<CoinData | null>(null);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -80,18 +83,33 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
     }
   };
 
+  const checkLimitAndProceed = async (action: () => Promise<void>) => {
+      if (!canUseAI()) {
+          setShowSubscription(true);
+          return;
+      }
+      // Execute the action (Analysis)
+      await action();
+      // Increment only after execution starts successfully
+      incrementUsage();
+  };
+
   const handleGlobalAnalysis = async (type: AnalysisType) => {
-    const title = `Análise de Mercado (${currentPersona})`;
-    onShowModal(title, "", true);
-    const result = await analyzeMarket(coins, type, selectedProvider, openRouterModel, currentPersona);
-    onShowModal(title, result, false);
+    await checkLimitAndProceed(async () => {
+        const title = `Análise de Mercado (${currentPersona})`;
+        onShowModal(title, "", true);
+        const result = await analyzeMarket(coins, type, selectedProvider, openRouterModel, currentPersona);
+        onShowModal(title, result, false);
+    });
   };
 
   const handleCoinAnalysis = async (coin: CoinData) => {
-    const title = `Análise: ${coin.name} (${currentPersona})`;
-    onShowModal(title, "", true);
-    const result = await analyzeSpecificCoin(coin, selectedProvider, openRouterModel, currentPersona);
-    onShowModal(title, result, false);
+    await checkLimitAndProceed(async () => {
+        const title = `Análise: ${coin.name} (${currentPersona})`;
+        onShowModal(title, "", true);
+        const result = await analyzeSpecificCoin(coin, selectedProvider, openRouterModel, currentPersona);
+        onShowModal(title, result, false);
+    });
   };
 
   const filteredCoins = coins.filter(c => {
@@ -251,6 +269,12 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedProvider, openRouterModel
             currentAlert={alertCoin ? alerts.find(a => a.coinId === alertCoin.id) : undefined}
             onSave={handleSaveAlert}
             onDelete={handleDeleteAlert}
+        />
+
+        <SubscriptionModal
+            isOpen={showSubscription}
+            onClose={() => setShowSubscription(false)}
+            onSuccess={() => setShowSubscription(false)}
         />
     </div>
   );

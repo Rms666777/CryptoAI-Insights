@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Settings, Check, AlertCircle, UserCheck, Network, Cpu } from 'lucide-react';
+import { X, Settings, Check, AlertCircle, UserCheck, Network, Cpu, Crown, LogOut } from 'lucide-react';
 import { AIPersona, AIProvider } from '../types';
+import { getUserProfile } from '../services/userService';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface SettingsModalProps {
   onSavePersona: (persona: AIPersona) => void;
   currentProvider: AIProvider;
   onSaveProvider: (provider: AIProvider) => void;
+  onLogout?: () => void;
 }
 
 const POPULAR_MODELS = [
@@ -39,11 +41,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     isOpen, onClose, 
     currentModel, onSaveModel, 
     currentPersona, onSavePersona,
-    currentProvider, onSaveProvider
+    currentProvider, onSaveProvider,
+    onLogout
 }) => {
   const [tempModel, setTempModel] = useState(currentModel);
   const [tempPersona, setTempPersona] = useState(currentPersona);
   const [tempProvider, setTempProvider] = useState(currentProvider);
+  
+  const userProfile = getUserProfile();
 
   if (!isOpen) return null;
 
@@ -71,6 +76,41 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <div className="p-6 space-y-8 overflow-y-auto custom-scrollbar">
             
+            {/* Account Status / Profile */}
+            <div className={`p-4 rounded-xl border ${userProfile.isPro ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-slate-800 border-slate-700'}`}>
+                <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        {userProfile.isPro ? <Crown size={16} className="text-amber-400 fill-amber-400" /> : <UserCheck size={16} />}
+                        {userProfile.email}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${userProfile.isPro ? 'bg-indigo-500 text-white' : 'bg-slate-600 text-slate-300'}`}>
+                        {userProfile.isPro ? 'PRO' : 'GRÁTIS'}
+                    </span>
+                </div>
+                {!userProfile.isPro && (
+                    <div className="mb-3">
+                        <div className="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Análises Gratuitas</span>
+                            <span>{userProfile.freeUsageCount} / {userProfile.maxFreeUsage}</span>
+                        </div>
+                        <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                            <div 
+                                className="bg-indigo-500 h-full transition-all" 
+                                style={{ width: `${(userProfile.freeUsageCount / userProfile.maxFreeUsage) * 100}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                )}
+                {onLogout && (
+                    <button 
+                        onClick={onLogout}
+                        className="w-full mt-2 flex items-center justify-center gap-2 py-2 bg-slate-700 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 rounded-lg text-xs font-bold transition-all border border-transparent hover:border-rose-500/30"
+                    >
+                        <LogOut size={14} /> Sair da Conta
+                    </button>
+                )}
+            </div>
+
             {/* Provider Section */}
             <div>
                 <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
